@@ -12,7 +12,7 @@ import {
 export const indexRouter = express.Router();
 
 async function indexRoute(req, res) {
-  const events = await listEvents();
+  const events = await listEvents(0);
   const userInfo = {id: null, user: null};
 
   console.log('indexRoute - index')
@@ -123,6 +123,13 @@ async function registerRoute(req, res) {
 }
 
 indexRouter.get('/', catchErrors(indexRoute));
+indexRouter.get('/nextpage', (req, res) => {
+  // logout hendir session cookie og session
+  console.log('Virkar??')
+  res.redirect('/');
+  });
+
+
 indexRouter.get('/:slug', catchErrors(eventRoute));
 indexRouter.post(
   '/:slug',

@@ -4,8 +4,7 @@ import { catchErrors } from '../lib/catch-errors.js';
 import {
   createEvent, listEvent,
   listEventByName,
-  listEvents,
-  updateEvent
+  listEvents, removeEvent, updateEvent
 } from '../lib/db.js';
 import { ensureLoggedIn } from '../lib/login.js';
 import { slugify } from '../lib/slugify.js';
@@ -190,6 +189,14 @@ async function eventRoute(req, res, next) {
   });
 }
 
+async function EventRemove(req,res) {
+  const {slug } = req.params;
+  const slugEvent = await listEvent(slug);
+  removeEvent(slugEvent.id);
+
+  return res.redirect('/admin');
+}
+
 adminRouter.get('/', ensureLoggedIn, catchErrors(index));
 adminRouter.post(
   '/',
@@ -199,6 +206,12 @@ adminRouter.post(
   catchErrors(validationCheck),
   sanitizationMiddleware('description'),
   catchErrors(registerRoute)
+);
+
+adminRouter.get(
+  '/remove/:slug',
+  ensureLoggedIn,
+  catchErrors(EventRemove)
 );
 
 // Verður að vera seinast svo það taki ekki yfir önnur route

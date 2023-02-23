@@ -100,6 +100,20 @@ export async function updateEvent(id, { name, slug, description, location, url }
   return null;
 }
 
+export async function removeEvent(id) {
+  const q1 = 'DELETE FROM registrations WHERE event = $1'
+  const q2 = 'DELETE FROM events WHERE id = $1'
+
+  const result1 = await query(q1,[id]);
+  const result2 = await query(q2, [id]);
+
+  // Vildi ekki fá error skilaboð fyrir að nota ekki bæði result
+  if(result1 && result2 === null) {
+    return null
+  }
+  return null;
+}
+
 export async function register({ name, comment, event } = {}) {
   const q = `
     INSERT INTO registrations
@@ -127,15 +141,17 @@ export async function removeRegistration( name, event ) {
 
 }
 
-export async function listEvents() {
+export async function listEvents(offset) {
   const q = `
     SELECT
       id, name, slug, description, location, url, owner, created, updated
     FROM
       events
+    OFFSET $1 LIMIT $2
   `;
 
-  const result = await query(q);
+  const values = [offset, 3]
+  const result = await query(q, values);
 
   if (result) {
     return result.rows;
