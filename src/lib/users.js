@@ -1,5 +1,8 @@
 import bcrypt from 'bcrypt';
+import xss from 'xss';
 import { query } from './db.js';
+
+const { BCRYPT_ROUNDS: bcryptRounds = 1 } = process.env;
 
 export async function comparePasswords(password, hash) {
   try {
@@ -44,23 +47,44 @@ export async function findById(id) {
   return null;
 }
 
-export async function createUser(username, password) {
-  // Geymum hashað password!
-  const hashedPassword = await bcrypt.hash(password, 11);
+export async function userInEvent(name, event) {
+  const q = `
+    SELECT
+      CASE WHEN EXISTS
+        (SELECT *
+        FROM registrations
+        WHERE name = $1
+          AND event = $2)
+      THEN true
+      ELSE false END`;
+
+  const values = [name, event];
+  const result = await query(q, values);
+
+  return result.rows[0].case;
+}
+
+export async function createUser(name, username, password) {
+   const hashedPassword = await bcrypt.hash(
+    password,
+    parseInt(bcryptRounds, 10)
+   );
 
   const q = `
     INSERT INTO
-      users (username, password)
-    VALUES ($1, $2)
-    RETURNING *
-  `;
+      users (name, username, password)
+    VALUES
+      ($1, $2, $3)
+    RETURNING *`;
 
-  try {
-    const result = await query(q, [username, hashedPassword]);
+  const values = [xss(name), xss(username), hashedPassword];
+  const result = await query(q, values);
+
+  if (result) {
     return result.rows[0];
-  } catch (e) {
-    console.error('Gat ekki búið til notanda');
   }
 
-  return null;
+  console.warn('unable to create user');
+
+  return false;
 }

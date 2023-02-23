@@ -1,22 +1,27 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
-import { listEvent, listEvents, listRegistered, register } from '../lib/db.js';
+import { listEvent, listEvents, listRegistered, register, removeRegistration } from '../lib/db.js';
+import { findByUsername, userInEvent } from '../lib/users.js';
 import {
   registrationValidationMiddleware,
   sanitizationMiddleware,
-  xssSanitizationMiddleware,
+  xssSanitizationMiddleware
 } from '../lib/validation.js';
 
 export const indexRouter = express.Router();
 
 async function indexRoute(req, res) {
   const events = await listEvents();
+  const userInfo = {id: null, user: null};
+
+  console.log('indexRoute - index')
 
   res.render('index', {
     title: 'Viðburðasíðan',
     admin: false,
     events,
+    userInfo,
   });
 }
 
@@ -29,6 +34,12 @@ async function eventRoute(req, res, next) {
   }
 
   const registered = await listRegistered(event.id);
+  const { user: { username } = {} } = req || {};
+  const userInfo = await findByUsername(username);
+  const userExists = await userInEvent(userInfo.name, event.id);
+  console.log(userExists);
+
+  console.log('Event route - index');
 
   return res.render('event', {
     title: `${event.name} — Viðburðasíðan`,
@@ -36,11 +47,16 @@ async function eventRoute(req, res, next) {
     registered,
     errors: [],
     data: {},
+    username,
+    userInfo,
+    userExists,
   });
 }
 
 async function eventRegisteredRoute(req, res) {
   const events = await listEvents();
+
+  console.log('Event registeredroute - index')
 
   res.render('registered', {
     title: 'Viðburðasíðan',
@@ -55,6 +71,8 @@ async function validationCheck(req, res, next) {
   const { slug } = req.params;
   const event = await listEvent(slug);
   const registered = await listRegistered(event.id);
+
+  console.log('validation check - index')
 
   const data = {
     name,
@@ -81,15 +99,25 @@ async function registerRoute(req, res) {
   const { slug } = req.params;
   const event = await listEvent(slug);
 
-  const registered = await register({
-    name,
-    comment,
-    event: event.id,
-  });
+  console.log('register route - index')
 
-  if (registered) {
+  const userExists = await userInEvent(name, event.id);
+
+  if(!userExists) {
+    const registered = await register({
+      name,
+      comment,
+      event: event.id,
+    });
+
+    if (registered) {
+      return res.redirect(`/${event.slug}`);
+    }
+  } else {
+    removeRegistration(name, event.id);
     return res.redirect(`/${event.slug}`);
   }
+
 
   return res.render('error');
 }

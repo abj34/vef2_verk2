@@ -3,6 +3,9 @@ CREATE TABLE public.events (
   name VARCHAR(64) NOT NULL UNIQUE,
   slug VARCHAR(64) NOT NULL UNIQUE,
   description TEXT,
+  location TEXT,
+  url character varying(256),
+  owner INTEGER NOT NULL,
   created TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -18,6 +21,8 @@ CREATE TABLE public.registrations (
 
 CREATE TABLE public.users (
   id serial primary key,
+  name character varying(64) NOT NULL,
   username character varying(64) NOT NULL,
-  password character varying(256) NOT NULL
+  password character varying(256) NOT NULL,
+  isAdmin BOOLEAN DEFAULT false
 );

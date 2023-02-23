@@ -4,9 +4,20 @@
   <div class="event__registration">
     <h2 class="event__subtitle">Uppfæra viðburð</h2>
     <form method="post" action="/admin/<%= event.slug %>" enctype="application/x-www-form-urlencoded" class="">
+
       <div class="field field--input<%= locals.isInvalid('name', errors) ?  ' field--invalid' : '' %>">
         <label for="name">Nafn*:</label>
         <input type="text" name="name" id="name" value="<%= data.name %>">
+      </div>
+
+      <div class="field field--input<%= locals.isInvalid('location', errors) ?  ' field--invalid' : '' %>">
+        <label for="location">Staðsetning:</label>
+        <input type="text" name="location" id="location" value="<%= data.location %>">
+      </div>
+
+      <div class="field field--input<%= locals.isInvalid('url', errors) ?  ' field--invalid' : '' %>">
+        <label for="url">Hlekkur að viðburði:</label>
+        <input type="text" name="url" id="url" value="<%= data.url %>">
       </div>
 
       <div class="field field--textarea<%= locals.isInvalid('description', errors) ?  ' field--invalid' : '' %>">
@@ -25,11 +36,14 @@
 
       <button class="button">Uppfæra viðburð</button>
     </form>
+    <br>
+    <form >
+      <button class="button">Fjarlægja viðburð</button>
+    </form>
   </div>
 
   <div class="user">
     <p class="user__loggedin">Innskráður sem: <strong><%= username %></strong></p>
-    <p class="user__logout"><a href="/admin/logout">Útskrá</a></p>
   </div>
 
   <div class="link">

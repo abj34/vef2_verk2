@@ -93,6 +93,16 @@ section {
   width: 100%;
 }
 
+.button_signout {
+  background-color: red;
+  border: 1px solid #fff;
+  border-radius: 8px;
+  max-width: 300px;
+  padding: 0.5rem;
+  transition: background-color ease-in 200ms, color ease-in 200ms;
+  width: 100%;
+}
+
 .button:hover {
   background-color: var(--color-accent-dark);
   color: var(--color-white);

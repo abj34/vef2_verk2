@@ -4,6 +4,10 @@
   <div class="event__info">
     <h1 class="event__title"><%= event.name %></h1>
     <p class="event__description"><%= event.description %></p>
+    <br>
+    <p class="event__location"><strong>Staðsetning:</strong> <%= event.location %></p>
+    <br>
+    <p class="event__url"><strong>Hlekkur:</strong> <a href="https://<%= event.url %>"><%= event.url %></a></p>
   </div>
 
   <div class="event__registered">
@@ -23,34 +27,84 @@
       </ul>
     <% } %>
   </div>
-  <div class="event__registration">
-    <h2 class="event__subtitle">Skráðu þig</h2>
-    <form method="post" action="/<%= event.slug %>" enctype="application/x-www-form-urlencoded" class="">
-      <div class="field field--input<%= locals.isInvalid('name', errors) ?  ' field--invalid' : '' %>">
-        <label for="name">Nafn*:</label>
-        <input type="text" name="name" id="name">
-      </div>
+  <% if (username !== undefined && !userExists) { %>
+    <div class="event__registration">
+      <h2 class="event__subtitle">Skráðu þig</h2>
+      <form method="post" action="/<%= event.slug %>" enctype="application/x-www-form-urlencoded" class="">
+        <div class="field field--input<%= locals.isInvalid('name', errors) ?  ' field--invalid' : '' %>">
+          <label for="name">Nafn:</label>
+          <input type="text" name="name" id="name" value="<%= userInfo.name %>" readonly>
+        </div>
 
-      <div class="field field--textarea<%= locals.isInvalid('comment', errors) ?  ' field--invalid' : '' %>">
-        <label for="comment">Athugasemd:</label>
-        <textarea name="comment" id="comment"><%= data.comment %></textarea>
-      </div>
+        <div class="field field--textarea<%= locals.isInvalid('comment', errors) ?  ' field--invalid' : '' %>">
+          <label for="comment">Athugasemd:</label>
+          <textarea name="comment" id="comment"><%= data.comment %></textarea>
+        </div>
 
-      <% if (errors.length > 0) { %>
-        <h3 class="errors__title">Villur við skráningu:</h3>
-        <ul class="errors">
-          <% errors.forEach((error) => { %>
-            <li class="error"><label for="<%= error.param %>"><%= error.msg %></label></li>
-          <% }); %>
-        </ul>
-      <% } %>
+        <% if (errors.length > 0) { %>
+          <h3 class="errors__title">Villur við skráningu:</h3>
+          <ul class="errors">
+            <% errors.forEach((error) => { %>
+              <li class="error"><label for="<%= error.param %>"><%= error.msg %></label></li>
+            <% }); %>
+          </ul>
+        <% } %>
 
-      <button class="button">Skrá mig</button>
-    </form>
+        <button class="button">Skrá mig</button>
+      </form>
+    </div>
+    <div class="user">
+    <p class="user__loggedin">Innskráður sem: <strong><%= username %></strong></p>
   </div>
-  <div class="link">
-    <a class="link__link" href="/">Til baka</a>
+    <div class="link">
+      <a class="link__link" href="/admin">Til baka</a>
+    </div>
+  <% } %>
+  <% if (userExists) { %>
+    <div class="event__registration">
+      <h2 class="event__subtitle">Skráðu þig</h2>
+      <form method="post" action="/<%= event.slug %>" enctype="application/x-www-form-urlencoded" class="">
+        <div class="field field--input<%= locals.isInvalid('name', errors) ?  ' field--invalid' : '' %>">
+          <label for="name">Nafn:</label>
+          <input type="text" name="name" id="name" value="<%= userInfo.name %>" readonly>
+        </div>
+
+        <div class="field field--textarea<%= locals.isInvalid('comment', errors) ?  ' field--invalid' : '' %>">
+          <label for="comment">Athugasemd:</label>
+          <textarea name="comment" id="comment" readonly><%= data.comment %></textarea>
+        </div>
+
+        <% if (errors.length > 0) { %>
+          <h3 class="errors__title">Villur við skráningu:</h3>
+          <ul class="errors">
+            <% errors.forEach((error) => { %>
+              <li class="error"><label for="<%= error.param %>"><%= error.msg %></label></li>
+            <% }); %>
+          </ul>
+        <% } %>
+
+        <button class="button_signout">Skrá mig úr viðburði</button>
+      </form>
+    </div>
+    <div class="user">
+    <p class="user__loggedin">Innskráður sem: <strong><%= username %></strong></p>
   </div>
+    <div class="link">
+      <a class="link__link" href="/admin">Til baka</a>
+    </div>
+  <% } %>
+  <% if (username == undefined) { %>
+    <div class="link">
+      <h3>Til að skrá sig á viðburð þarft þú að eiga aðgang.</h3>
+        <a class="link__link" href="/login">Innskráning</a>
+        <br>
+        <a class="link__link" href="/register">Búðu til nýjan aðgang</a>
+    </div>
+    <div class="link">
+      <a class="link__link" href="/">Til baka</a>
+    </div>
+  <% } %>
+
 </section>
 
 <%- include('footer') -%>

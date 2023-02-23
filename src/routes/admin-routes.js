@@ -2,18 +2,18 @@ import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
 import {
-  createEvent,
-  listEvent,
+  createEvent, listEvent,
   listEventByName,
   listEvents,
-  updateEvent,
+  updateEvent
 } from '../lib/db.js';
-import passport, { ensureLoggedIn } from '../lib/login.js';
+import { ensureLoggedIn } from '../lib/login.js';
 import { slugify } from '../lib/slugify.js';
+import { findByUsername } from '../lib/users.js';
 import {
   registrationValidationMiddleware,
   sanitizationMiddleware,
-  xssSanitizationMiddleware,
+  xssSanitizationMiddleware
 } from '../lib/validation.js';
 
 export const adminRouter = express.Router();
@@ -21,43 +21,33 @@ export const adminRouter = express.Router();
 async function index(req, res) {
   const events = await listEvents();
   const { user: { username } = {} } = req || {};
+  const userInfo = await findByUsername(username);
+
+  console.log('index - adminrouter');
 
   return res.render('admin', {
     username,
+    userInfo,
     events,
     errors: [],
     data: {},
-    title: 'Viðburðir — umsjón',
+    title: 'Viðburðir — skráður inn notandi',
     admin: true,
   });
 }
 
-function login(req, res) {
-  if (req.isAuthenticated()) {
-    return res.redirect('/admin');
-  }
-
-  let message = '';
-
-  // Athugum hvort einhver skilaboð séu til í session, ef svo er birtum þau
-  // og hreinsum skilaboð
-  if (req.session.messages && req.session.messages.length > 0) {
-    message = req.session.messages.join(', ');
-    req.session.messages = [];
-  }
-
-  return res.render('login', { message, title: 'Innskráning' });
-}
-
 async function validationCheck(req, res, next) {
-  const { name, description } = req.body;
+  const { name, description, location, url } = req.body;
 
   const events = await listEvents();
-  const { user: { username } = {} } = req;
+  const { user: { username } = {} } = req || {};
+  console.log('validationcheck - admin')
 
   const data = {
     name,
     description,
+    location,
+    url,
   };
 
   const validation = validationResult(req);
@@ -88,15 +78,19 @@ async function validationCheck(req, res, next) {
 }
 
 async function validationCheckUpdate(req, res, next) {
-  const { name, description } = req.body;
+  const { name, description, location, url } = req.body;
   const { slug } = req.params;
   const { user: { username } = {} } = req;
+
+  console.log('validationcheckupdate - admin')
 
   const event = await listEvent(slug);
 
   const data = {
     name,
     description,
+    location,
+    url,
   };
 
   const validation = validationResult(req);
@@ -127,10 +121,16 @@ async function validationCheckUpdate(req, res, next) {
 }
 
 async function registerRoute(req, res) {
-  const { name, description } = req.body;
+  const { name, description, location, url } = req.body;
   const slug = slugify(name);
 
-  const created = await createEvent({ name, slug, description });
+  const { user: { username } = {} } = req;
+  const userInfo = await findByUsername(username);
+  const owner = userInfo.id
+
+  console.log('registerroute - admin')
+
+  const created = await createEvent({ name, slug, description, location, url, owner });
 
   if (created) {
     return res.redirect('/admin');
@@ -140,17 +140,21 @@ async function registerRoute(req, res) {
 }
 
 async function updateRoute(req, res) {
-  const { name, description } = req.body;
+  const { name, description, location, url } = req.body;
   const { slug } = req.params;
 
   const event = await listEvent(slug);
 
   const newSlug = slugify(name);
 
+  console.log('updateroute - admin')
+
   const updated = await updateEvent(event.id, {
     name,
     slug: newSlug,
     description,
+    location,
+    url,
   });
 
   if (updated) {
@@ -166,6 +170,8 @@ async function eventRoute(req, res, next) {
 
   const event = await listEvent(slug);
 
+  console.log('eventroute - admin');
+
   if (!event) {
     return next();
   }
@@ -175,7 +181,12 @@ async function eventRoute(req, res, next) {
     title: `${event.name} — Viðburðir — umsjón`,
     event,
     errors: [],
-    data: { name: event.name, description: event.description },
+    data: {
+      name: event.name,
+      description: event.description,
+      location: event.location,
+      url: event.url
+    },
   });
 }
 
@@ -189,28 +200,6 @@ adminRouter.post(
   sanitizationMiddleware('description'),
   catchErrors(registerRoute)
 );
-
-adminRouter.get('/login', login);
-adminRouter.post(
-  '/login',
-
-  // Þetta notar strat að ofan til að skrá notanda inn
-  passport.authenticate('local', {
-    failureMessage: 'Notandanafn eða lykilorð vitlaust.',
-    failureRedirect: '/admin/login',
-  }),
-
-  // Ef við komumst hingað var notandi skráður inn, senda á /admin
-  (req, res) => {
-    res.redirect('/admin');
-  }
-);
-
-adminRouter.get('/logout', (req, res) => {
-  // logout hendir session cookie og session
-  req.logout();
-  res.redirect('/');
-});
 
 // Verður að vera seinast svo það taki ekki yfir önnur route
 adminRouter.get('/:slug', ensureLoggedIn, catchErrors(eventRoute));

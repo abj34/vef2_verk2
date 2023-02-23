@@ -57,15 +57,15 @@ export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
   return query(data.toString('utf-8'));
 }
 
-export async function createEvent({ name, slug, description } = {}) {
+export async function createEvent({ name, slug, description, location, url, owner } = {}) {
   const q = `
     INSERT INTO events
-      (name, slug, description)
+      (name, slug, description, location, url, owner)
     VALUES
-      ($1, $2, $3)
+      ($1, $2, $3, $4, $5, $6)
     RETURNING id, name, slug, description;
   `;
-  const values = [name, slug, description];
+  const values = [name, slug, description, location, url, owner];
   const result = await query(q, values);
 
   if (result && result.rowCount === 1) {
@@ -76,19 +76,21 @@ export async function createEvent({ name, slug, description } = {}) {
 }
 
 // Updatear ekki description, erum ekki að útfæra partial update
-export async function updateEvent(id, { name, slug, description } = {}) {
+export async function updateEvent(id, { name, slug, description, location, url } = {}) {
   const q = `
     UPDATE events
       SET
         name = $1,
         slug = $2,
         description = $3,
+        location = $4,
+        url = $5,
         updated = CURRENT_TIMESTAMP
     WHERE
-      id = $4
-    RETURNING id, name, slug, description;
+      id = $6
+    RETURNING id, name, slug, description, location, url;
   `;
-  const values = [name, slug, description, id];
+  const values = [name, slug, description, location, url, id];
   const result = await query(q, values);
 
   if (result && result.rowCount === 1) {
@@ -117,10 +119,18 @@ export async function register({ name, comment, event } = {}) {
   return null;
 }
 
+export async function removeRegistration( name, event ) {
+  const q = 'DELETE from registrations where name = $1 AND event = $2'
+
+  const values = [name, event];
+  query(q, values);
+
+}
+
 export async function listEvents() {
   const q = `
     SELECT
-      id, name, slug, description, created, updated
+      id, name, slug, description, location, url, owner, created, updated
     FROM
       events
   `;
@@ -137,7 +147,7 @@ export async function listEvents() {
 export async function listEvent(slug) {
   const q = `
     SELECT
-      id, name, slug, description, created, updated
+      id, name, slug, description, location, url, owner, created, updated
     FROM
       events
     WHERE slug = $1
@@ -156,7 +166,7 @@ export async function listEvent(slug) {
 export async function listEventByName(name) {
   const q = `
     SELECT
-      id, name, slug, description, created, updated
+      id, name, slug, description, location, url, owner, created, updated
     FROM
       events
     WHERE name = $1

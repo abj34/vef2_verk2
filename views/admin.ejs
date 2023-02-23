@@ -12,6 +12,16 @@
       <input type="text" name="name" id="name" value="<%= data.name %>">
     </div>
 
+    <div class="field field--input<%= locals.isInvalid('location', errors) ?  ' field--invalid' : '' %>">
+        <label for="location">Staðsetning:</label>
+        <input type="text" name="location" id="location" value="<%= data.location %>">
+      </div>
+
+      <div class="field field--input<%= locals.isInvalid('url', errors) ?  ' field--invalid' : '' %>">
+        <label for="url">Hlekkur að viðburði:</label>
+        <input type="text" name="url" id="url" value="<%= data.url %>">
+      </div>
+
     <div class="field field--textarea<%= locals.isInvalid('description', errors) ?  ' field--invalid' : '' %>">
       <label for="description">Lýsing:</label>
       <textarea name="description" id="description"><%= data.description %></textarea>
@@ -32,7 +42,7 @@
 
 <div class="user">
   <p class="user__loggedin">Innskráður sem: <strong><%= username %></strong></p>
-  <p class="user__logout"><a href="/admin/logout">Útskrá</a></p>
+  <p class="user__logout"><a href="/logout">Útskrá</a></p>
 </div>
 
 <%- include('footer') -%>
