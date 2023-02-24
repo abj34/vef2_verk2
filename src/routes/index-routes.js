@@ -18,7 +18,7 @@ export const indexRouter = express.Router();
 export const page = { pagenumber: 0,  pageamount: 0, pageincrement: 10};
 
 async function indexRoute(req, res) {
-  const events = await listEvents(page.pagenumber);
+  const events = await listEvents(page.pagenumber, page.pageincrement);
   const pageamount = await eventAmount();
   page.pageamount = Math.ceil(Number(pageamount) / page.pageincrement);
   const userInfo = {id: null, username: null};

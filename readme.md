@@ -89,8 +89,6 @@ Skil skulu innihalda:
 | ------ | ------------- |
 | 0.1    | Fyrsta útgáfa |
 
-
-
 # Vef2 2022, verkefni 2 sýnilausn
 
 Sýnilausn á [verkefni 2](https://github.com/vefforritun/vef2-2022-v2).
