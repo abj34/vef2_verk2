@@ -1,7 +1,11 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
-import { listEvent, listEvents, listRegistered, register, removeRegistration } from '../lib/db.js';
+import {
+  eventAmount, listEvent,
+  listEvents, listRegistered,
+  register, removeRegistration
+} from '../lib/db.js';
 import { findByUsername, userInEvent } from '../lib/users.js';
 import {
   registrationValidationMiddleware,
@@ -11,17 +15,21 @@ import {
 
 export const indexRouter = express.Router();
 
-async function indexRoute(req, res) {
-  const events = await listEvents(0);
-  const userInfo = {id: null, user: null};
+export const page = { pagenumber: 0,  pageamount: 0, pageincrement: 10};
 
-  console.log('indexRoute - index')
+async function indexRoute(req, res) {
+  const events = await listEvents(page.pagenumber);
+  const pageamount = await eventAmount();
+  page.pageamount = Math.ceil(Number(pageamount) / page.pageincrement);
+  const userInfo = {id: null, username: null};
+  const userExists = null;
 
   res.render('index', {
     title: 'Viðburðasíðan',
     admin: false,
     events,
     userInfo,
+    userExists,
   });
 }
 
@@ -37,9 +45,6 @@ async function eventRoute(req, res, next) {
   const { user: { username } = {} } = req || {};
   const userInfo = await findByUsername(username);
   const userExists = await userInEvent(userInfo.name, event.id);
-  console.log(userExists);
-
-  console.log('Event route - index');
 
   return res.render('event', {
     title: `${event.name} — Viðburðasíðan`,
@@ -56,8 +61,6 @@ async function eventRoute(req, res, next) {
 async function eventRegisteredRoute(req, res) {
   const events = await listEvents();
 
-  console.log('Event registeredroute - index')
-
   res.render('registered', {
     title: 'Viðburðasíðan',
     events,
@@ -71,8 +74,6 @@ async function validationCheck(req, res, next) {
   const { slug } = req.params;
   const event = await listEvent(slug);
   const registered = await listRegistered(event.id);
-
-  console.log('validation check - index')
 
   const data = {
     name,
@@ -98,9 +99,6 @@ async function registerRoute(req, res) {
   const { name, comment } = req.body;
   const { slug } = req.params;
   const event = await listEvent(slug);
-
-  console.log('register route - index')
-
   const userExists = await userInEvent(name, event.id);
 
   if(!userExists) {
@@ -123,9 +121,19 @@ async function registerRoute(req, res) {
 }
 
 indexRouter.get('/', catchErrors(indexRoute));
+
+indexRouter.get('/previouspage', (req, res) => {
+  // Hleður niður fyrri bls
+  if(page.pagenumber !== 0) {
+    page.pagenumber = Number(page.pagenumber) - page.pageincrement
+  }
+  res.redirect('/');
+});
 indexRouter.get('/nextpage', (req, res) => {
-  // logout hendir session cookie og session
-  console.log('Virkar??')
+  // Hleður niður næstu bls
+  if( page.pageamount !== Math.ceil((page.pagenumber+1) / page.pageincrement) ) {
+    page.pagenumber = Number(page.pagenumber) + page.pageincrement
+  }
   res.redirect('/');
   });
 

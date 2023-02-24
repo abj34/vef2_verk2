@@ -12,4 +12,17 @@
     <% } %>
   </ul>
 
+  <% if (userInfo.username === null) { %>
+    <form>
+      <button class="button_smaller"><a class="button_a" href="/previouspage">Fyrri Síða</a></button>
+      <button class="button_smaller"><a class="button_a" href="/nextpage">Næsta Síða</a></button>
+    </form>
+  <% } %>
+  <% if (userInfo.username !== null) { %>
+  <form>
+      <button class="button_smaller"><a class="button_a" href="/admin/previouspage">Fyrri Síða</a></button>
+      <button class="button_smaller"><a class="button_a" href="/admin/nextpage">Næsta Síða</a></button>
+    </form>
+  <% } %>
+
 </section>

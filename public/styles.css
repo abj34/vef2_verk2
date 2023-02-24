@@ -93,6 +93,21 @@ section {
   width: 100%;
 }
 
+.button_smaller {
+  background-color: var(--color-accent);
+  border: 1px solid #fff;
+  border-radius: 8px;
+  max-width: 200px;
+  padding: 0.5rem;
+  transition: background-color ease-in 200ms, color ease-in 200ms;
+  width: 50%;
+}
+
+.button_a {
+  color: black;
+  text-decoration: none;
+}
+
 .button_signout {
   background-color: red;
   border: 1px solid #fff;

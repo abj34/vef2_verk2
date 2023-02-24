@@ -141,7 +141,7 @@ export async function removeRegistration( name, event ) {
 
 }
 
-export async function listEvents(offset) {
+export async function listEvents(offset, limit) {
   const q = `
     SELECT
       id, name, slug, description, location, url, owner, created, updated
@@ -150,7 +150,7 @@ export async function listEvents(offset) {
     OFFSET $1 LIMIT $2
   `;
 
-  const values = [offset, 3]
+  const values = [offset, limit]
   const result = await query(q, values);
 
   if (result) {
@@ -213,6 +213,13 @@ export async function listRegistered(event) {
   }
 
   return null;
+}
+
+export async function eventAmount() {
+  const q = 'SELECT COUNT(id) AS amount FROM events'
+
+  const result = await query(q);
+  return result.rows[0].amount;
 }
 
 export async function end() {

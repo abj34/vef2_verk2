@@ -2,9 +2,8 @@ import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
 import {
-  createEvent, listEvent,
-  listEventByName,
-  listEvents, removeEvent, updateEvent
+  createEvent, eventAmount, listEvent,
+  listEventByName, listEvents, removeEvent, updateEvent
 } from '../lib/db.js';
 import { ensureLoggedIn } from '../lib/login.js';
 import { slugify } from '../lib/slugify.js';
@@ -17,12 +16,15 @@ import {
 
 export const adminRouter = express.Router();
 
+export const page = { pagenumber: 0,  pageamount: 0, pageincrement: 10};
+
 async function index(req, res) {
-  const events = await listEvents();
+  const events = await listEvents(page.pagenumber, page.pageincrement);
+  const pageamount = await eventAmount();
+  page.pageamount = Math.ceil(Number(pageamount) / page.pageincrement);
+
   const { user: { username } = {} } = req || {};
   const userInfo = await findByUsername(username);
-
-  console.log('index - adminrouter');
 
   return res.render('admin', {
     username,
@@ -40,7 +42,6 @@ async function validationCheck(req, res, next) {
 
   const events = await listEvents();
   const { user: { username } = {} } = req || {};
-  console.log('validationcheck - admin')
 
   const data = {
     name,
@@ -80,8 +81,6 @@ async function validationCheckUpdate(req, res, next) {
   const { name, description, location, url } = req.body;
   const { slug } = req.params;
   const { user: { username } = {} } = req;
-
-  console.log('validationcheckupdate - admin')
 
   const event = await listEvent(slug);
 
@@ -127,8 +126,6 @@ async function registerRoute(req, res) {
   const userInfo = await findByUsername(username);
   const owner = userInfo.id
 
-  console.log('registerroute - admin')
-
   const created = await createEvent({ name, slug, description, location, url, owner });
 
   if (created) {
@@ -145,8 +142,6 @@ async function updateRoute(req, res) {
   const event = await listEvent(slug);
 
   const newSlug = slugify(name);
-
-  console.log('updateroute - admin')
 
   const updated = await updateEvent(event.id, {
     name,
@@ -168,8 +163,6 @@ async function eventRoute(req, res, next) {
   const { user: { username } = {} } = req;
 
   const event = await listEvent(slug);
-
-  console.log('eventroute - admin');
 
   if (!event) {
     return next();
@@ -207,6 +200,21 @@ adminRouter.post(
   sanitizationMiddleware('description'),
   catchErrors(registerRoute)
 );
+
+adminRouter.get('/previouspage', (req, res) => {
+  // Hleður niður fyrri bls
+  if(page.pagenumber !== 0) {
+    page.pagenumber = Number(page.pagenumber) - page.pageincrement
+  }
+  res.redirect('/admin');
+});
+adminRouter.get('/nextpage', (req, res) => {
+  // Hleður niður næstu bls
+  if( page.pageamount !== Math.ceil((page.pagenumber+1) / page.pageincrement) ) {
+    page.pagenumber = Number(page.pagenumber) + page.pageincrement
+  }
+  res.redirect('/admin');
+  });
 
 adminRouter.get(
   '/remove/:slug',
